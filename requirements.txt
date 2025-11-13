@@ -1,0 +1,4 @@
+numpy>=1.21
+pandas>=1.3
+requests>=2.31
+openai-agent-python>=0.1.0
