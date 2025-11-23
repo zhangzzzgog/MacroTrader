@@ -1,7 +1,7 @@
 import ast
 import inspect
 import os
-os.environ["OPENROUTER_API_KEY"] = "sk-xtbmmu8JYNTtQHpZ9zW7co27gtzAuQdckXAQzxgpwEk6l7Bc"
+os.environ["OPENROUTER_API_KEY"] = ""
 import re
 import ast
 import json
@@ -14,7 +14,7 @@ from openai import OpenAI
 
 import platform
 
-from prompt_template import data_analysis_system_prompt_template, task_router_system_prompt_template
+from prompt_template import data_analysis_system_prompt_template, task_router_system_prompt_template,summary_system_prompt_template
 from data_process import process_investment_csv,process_policy_csv,format_company_analysis
 from test_tool import test_predicted_investments
 
@@ -108,7 +108,13 @@ class RouterAgent(BaseAgent):
                 results[agent_name] = result
             else:
                 results[agent_name] = f"未找到名为 {agent_name} 的公司代理。"
-        return results
+        
+        final_messages = [
+            {"role": "system", "content": summary_system_prompt_template},
+            {"role": "user", "content": f"{results}"}
+        ]
+        final_result = self.call_model(final_messages)
+        return final_result
     
     def render_system_prompt(self, system_prompt_template: str) -> str:
         """渲染系统提示模板，替换变量"""
@@ -426,11 +432,11 @@ def main():
             company_name=company,
             company_country=source_country,
             company_sector=company_sector,
-            risk_preference_score=0.52,
-            imitation_score=0.56,
+            risk_preference_score=0.5,
+            imitation_score=0.62,
             policy_impact_score=0.82,
-            expansion_score=0.50,
-            history_investments=investments["train"],
+            expansion_score=0.42,
+            history_investments=investments["train"]+investments["pred"],
             predicted_investments=investments["pred"],
         )
         def company_update_parameters(risk_preference_score: float,
